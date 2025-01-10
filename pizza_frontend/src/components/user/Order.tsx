@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../common/NavBar';
 import { useNavigate } from 'react-router-dom';
-import { useTokenContext } from '../../contexts/TokenContext';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
@@ -23,7 +22,7 @@ interface OrderItem {
 
 const Order: React.FC = () => {
     const navigate = useNavigate();
-    const { userEmail } = useTokenContext();
+    const userEmail = "";
     const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');

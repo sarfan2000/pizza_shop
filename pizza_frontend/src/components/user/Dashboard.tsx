@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../common/NavBar';
 import { useNavigate } from 'react-router-dom';
-import { useTokenContext } from '../../contexts/TokenContext';
 import axios from 'axios';
 import { Pizza } from '../../models/pizza';
 import pizza2 from '../../assets/pizza2.png';
@@ -13,17 +12,17 @@ import { faHeart, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 const Dashboard: React.FC = () => {
   // const notificationSound = new Audio(alert);
   const navigate = useNavigate();
-  const { userEmail } = useTokenContext();
+  const userEmail = "";
 
   const [pizzas, setPizzas] = useState<Pizza[]>([]);
   const [offerPizzas, setOfferPizzas] = useState<Pizza[]>([]);
 
   useEffect(() => {
-    if (!userEmail || userEmail === '') {
-      navigate('/login');
-    } else {
-      fetchPizzas();
-    }
+    // if (!userEmail || userEmail === '') {
+    //   navigate('/login');
+    // } else {
+    //   fetchPizzas();
+    // }
   }, []);
 
   const fetchPizzas = async () => {

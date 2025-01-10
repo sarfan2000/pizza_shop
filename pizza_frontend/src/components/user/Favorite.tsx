@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../common/NavBar';
 import { useNavigate } from 'react-router-dom';
-import { useTokenContext } from '../../contexts/TokenContext';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -19,7 +18,7 @@ interface FavoriteItem {
 
 const Favorite: React.FC = () => {
     const navigate = useNavigate();
-    const { userEmail } = useTokenContext();
+    const userEmail = "";
     const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');

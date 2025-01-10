@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link,  } from 'react-router-dom';
 import { AuthService } from '../../services/authService';
 import Navbar from './NavBar';
-import { useTokenContext } from '../../contexts/TokenContext';
 import { usePizzaContext } from '../../contexts/PizzaContext';
 //import { User } from '../../models/user';
 
@@ -14,15 +13,14 @@ const Signup: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const { userEmail, setUserEmail, setUserId } = useTokenContext();
   const { showErrorToast, showSuccessToast } = usePizzaContext();
 
   useEffect(() => {
-    if (userEmail || userEmail !== '') {
-      localStorage.clear();
-      setUserEmail('');
-      setUserId('');
-    }
+    // if (userEmail || userEmail !== '') {
+    //   localStorage.clear();
+    //   setUserEmail('');
+    //   setUserId('');
+    // }
   }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
