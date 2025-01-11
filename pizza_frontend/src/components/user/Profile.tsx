@@ -4,33 +4,28 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt, faUserCircle } from "@fortawesome/free-solid-svg-icons";
-import axios from "axios";
-import { User } from "../../models/user";
+import { doSignOut } from "../../firebase/auth";
+import { getAuth } from "firebase/auth";
+import { useAuth } from "../../contexts/authContext";
 
 const Profile: React.FC = () => {
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState<User>();
 
-  // useEffect(() => {
-  //     if (!userEmail || userEmail === '') {
-  //         navigate('/login');
-  //     } else {
-  //         fetchProfile();
-  //     }
-  // }, [userEmail]);
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
-  // const fetchProfile = async () => {
-  //     setLoading(true);
-  //     try {
-  //         const response = await axios.get(`http://localhost:8080/api/users/get/${userEmail}`);
-  //         setProfile(response.data.data);
-  //     } catch (error) {
-  //         console.error('Error fetching profile:', error);
-  //     } finally {
-  //         setLoading(false);
-  //     }
-  // };
+  const fetchUserProfile = () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+  };
 
   const handleLogout = async () => {
     const { isConfirmed } = await Swal.fire({
@@ -43,16 +38,15 @@ const Profile: React.FC = () => {
       confirmButtonText: "Yes, logout!",
     });
 
-    // if (isConfirmed) {
-    //     try {
-    //         setUserEmail('');
-    //         setUserId('');
-    //         localStorage.clear();
-    //         navigate('/login');
-    //     } catch (error) {
-    //         console.error('Logout failed:', error);
-    //     }
-    // }
+    if (isConfirmed) {
+      try {
+        doSignOut();
+        localStorage.clear();
+        navigate("/login");
+      } catch (error) {
+        console.error("Logout failed:", error);
+      }
+    }
   };
 
   return (
@@ -68,13 +62,13 @@ const Profile: React.FC = () => {
           {loading ? (
             <p className="text-blue-500">Loading profile...</p>
           ) : (
-            profile && (
+            currentUser && (
               <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">{profile.name}</h2>
-                <p className="text-lg mb-2">Email: {profile.email}</p>
-                <p className="text-lg mb-2">Mobile: {profile.mobile}</p>
+                <h2 className="text-2xl font-bold mb-2">{currentUser.displayName}</h2>
+                <p className="text-lg mb-2">Email: {currentUser.email}</p>
                 <p className="text-lg mb-2">
-                  Loyalty Points: {profile.loyaltyPoints}
+                  Loyalty Points: 
+                  {/* {currentUser.loyaltyPoints} */}
                 </p>
               </div>
             )

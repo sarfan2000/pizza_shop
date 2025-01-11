@@ -26,6 +26,23 @@ const productSchema = new Schema<IProduct>({
     type: Number,
     required: true,
   },
+  crust: {
+    type: String,
+    required: true,
+  },
+  sauce: {
+    type: String,
+    required: true,
+  },
+  cheese: {
+    type: String,
+    required: true,
+  },
+  toppings: {
+    type: [String],
+    required: false,
+    default: [],
+  },
   isTrending: {
     type: Boolean,
     default: false,

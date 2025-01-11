@@ -8,12 +8,11 @@ import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../contexts/authContext";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 const Dashboard: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const userEmail = "";
 
   const [pizzas, setPizzas] = useState<Pizza[]>([]);
   const [offerPizzas, setOfferPizzas] = useState<Pizza[]>([]);
@@ -26,36 +25,27 @@ const Dashboard: React.FC = () => {
     const auth = getAuth();
     const user = auth.currentUser;
 
-    if (user) {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    try {
       const token = await user.getIdToken();
-      const response = await fetch("http://localhost:3020/api/protected", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
 
-      const data = await response.json();
-      console.log({ ddd: data });
-    }
-  };
-
-  const fetchPizzas = async () => {
-    try {
-      const response = await axios.get("http://localhost:8080/api/pizzas/all");
-      setPizzas(response.data);
-    } catch (error) {
-      console.error("Error fetching pizzas:", error);
-    }
-
-    try {
-      const response2 = await axios.get(
-        "http://localhost:8080/api/pizzas/offers"
+      const response = await axios.get(
+        "http://localhost:3020/api/auth/get-all-products",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      setOfferPizzas(response2.data);
+
+      setPizzas(response.data.data);
     } catch (error) {
-      console.error("Error fetching pizzas:", error);
+      console.error("Error fetching products:", error);
     }
   };
 
@@ -129,7 +119,7 @@ const Dashboard: React.FC = () => {
       <div className="w-full p-5 grid grid-cols-4 gap-4">
         {offerPizzas.map((pizza: Pizza) => (
           <div
-            key={pizza.pizzaId}
+            key={pizza._id}
             className="border border-brown-800 rounded-lg shadow-lg p-5"
           >
             <img
@@ -143,8 +133,11 @@ const Dashboard: React.FC = () => {
             <p>Cheese: {pizza.cheese}</p>
             <p>
               Toppings:{" "}
-              {pizza.toppings ? pizza.toppings.split(",").join(", ") : "None"}
+              {pizza.toppings && pizza.toppings.length > 0
+                ? pizza.toppings.join(", ")
+                : "None"}
             </p>
+
             <div>
               <p className="text-red-600 font-bold">
                 Discounted Price: LKR {pizza.netPrice}
@@ -191,8 +184,11 @@ const Dashboard: React.FC = () => {
             <p>Cheese: {pizza.cheese}</p>
             <p>
               Toppings:{" "}
-              {pizza.toppings ? pizza.toppings.split(",").join(", ") : "None"}
+              {pizza.toppings && pizza.toppings.length > 0
+                ? pizza.toppings.join(", ")
+                : "None"}
             </p>
+
             <p className="text-green-600 font-bold">Price: LKR {pizza.price}</p>
             <div className="flex gap-2">
               <button

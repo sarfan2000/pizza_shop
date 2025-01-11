@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Place from "../schemas/productSchema";
+import Product from "../schemas/productSchema";
 import { Util } from "../common/util";
 
 export namespace UserController {
@@ -19,10 +19,7 @@ export namespace UserController {
     res: Response
   ): Promise<void> {
     try {
-      const data = await Place.find({ isTrending: true }).populate({
-        path: "updatedBy",
-        select: "name",
-      });
+      const data = await Product.find();
       Util.sendSuccess(res, data);
     } catch (error) {
       throw Error(error);
