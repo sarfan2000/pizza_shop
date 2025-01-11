@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faHome, faPizzaSlice, faShoppingCart, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faHome, faShoppingCart, faUser } from '@fortawesome/free-solid-svg-icons';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -55,7 +55,7 @@ const Navbar: React.FC = () => {
               Login
             </Link>
           </>
-        ) : (location.pathname === '/dashboard' || location.pathname === '/customize' || location.pathname === '/cart' || location.pathname === '/favorite' || location.pathname === '/profile' || location.pathname === '/orders') ? (
+        ) : (location.pathname === '/dashboard' || location.pathname === '/cart' || location.pathname === '/favorite' || location.pathname === '/profile' || location.pathname === '/orders') ? (
           <>
             <Link
               to="/dashboard"
@@ -63,13 +63,6 @@ const Navbar: React.FC = () => {
             >
               <FontAwesomeIcon icon={faHome} />
               Dashboard
-            </Link>
-            <Link
-              to="/customize"
-              className="py-2 px-5 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-brown-800 text-white hover:bg-brown-400"
-            >
-              <FontAwesomeIcon icon={faPizzaSlice} />
-              Customize
             </Link>
             <Link
               to="/favorite"

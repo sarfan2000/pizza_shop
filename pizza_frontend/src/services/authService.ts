@@ -18,14 +18,4 @@ export class AuthService {
       return { success: false, error: error.message };
     }
   }
-  public static async login(email: string, password: string): Promise<AuthResponse> {
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return { success: true, data: userCredential.user };
-    } catch (error: any) {
-      console.error("Login Error:", error.message);
-      return { success: false, error: error.message };
-    }
-  }
 }
