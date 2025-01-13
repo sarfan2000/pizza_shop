@@ -57,16 +57,16 @@ const Profile: React.FC = () => {
           <FontAwesomeIcon
             icon={faUserCircle}
             size="10x"
-            className="text-brown-600 mb-4"
+            className="mb-4 text-brown-600"
           />
           {loading ? (
             <p className="text-blue-500">Loading profile...</p>
           ) : (
             currentUser && (
               <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">{currentUser.displayName}</h2>
-                <p className="text-lg mb-2">Email: {currentUser.email}</p>
-                <p className="text-lg mb-2">
+                <h2 className="mb-2 text-2xl font-bold">{currentUser.displayName}</h2>
+                <p className="mb-2 text-lg">Email: {currentUser.email}</p>
+                <p className="mb-2 text-lg">
                   Loyalty Points: 
                   {/* {currentUser.loyaltyPoints} */}
                 </p>
@@ -76,19 +76,19 @@ const Profile: React.FC = () => {
           <div className="flex gap-4 mt-4">
             <button
               onClick={() => navigate("/favorite")}
-              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-700 text-white hover:bg-blue-500"
+              className="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-blue-700 border border-transparent rounded-lg gap-x-2 hover:bg-blue-500"
             >
               Favourites
             </button>
             <button
               onClick={() => navigate("/orders")}
-              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-green-700 text-white hover:bg-green-500"
+              className="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-green-700 border border-transparent rounded-lg gap-x-2 hover:bg-green-500"
             >
               My Orders
             </button>
             <button
               onClick={handleLogout}
-              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-brown-800 text-white hover:bg-brown-400"
+              className="inline-flex items-center px-4 py-2 text-sm font-semibold text-white border border-transparent rounded-lg gap-x-2 bg-brown-800 hover:bg-brown-400"
             >
               <FontAwesomeIcon icon={faSignOutAlt} />
               Logout

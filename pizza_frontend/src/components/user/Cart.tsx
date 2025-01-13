@@ -11,58 +11,61 @@ import {
   faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
 import Checkout from "./Checkout";
-
-interface CartItem {
-  pizzaName: string;
-  crust: string;
-  sauce: string;
-  cheese: string;
-  toppings: string;
-  price: number;
-  totalPrice: number;
-  quantity: number;
-}
+import { getAuth } from "firebase/auth";
+import { CartItem } from "../../models/cartItem";
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
-  const userEmail = "";
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showCheckout, setShowCheckout] = useState(false);
 
-  useEffect(() => {
-    if (!userEmail || userEmail === "") {
-      navigate("/login");
-    } else {
-      fetchCartItems();
-    }
-  }, [userEmail]);
+  const auth = getAuth();
+  const user = auth.currentUser;
 
-  const fetchCartItems = async () => {
-    setLoading(true);
-    setError("");
+  useEffect(() => {
+    fetchAllCartItem();
+  }, []);
+
+  const fetchAllCartItem = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     try {
+      const token = await user.getIdToken();
+
       const response = await axios.get(
-        `http://localhost:8080/api/cart/get/${userEmail}`
+        "http://localhost:3020/api/auth/get-cart-items",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      setCartItems(Array.isArray(response.data.data) ? response.data.data : []);
+
+      setCartItems(response.data.data);
     } catch (error) {
-      setError("Error fetching cart items.");
-      console.error("Error fetching cart items:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching products:", error);
     }
   };
 
-  const handleRemoveItem = async (pizzaName: string) => {
+  const handleRemoveItem = async (productId: string) => {
     try {
+      const token = await user?.getIdToken();
       const response = await axios.delete(
-        `http://localhost:8080/api/cart/remove/${userEmail}/${pizzaName}`
+        `http://localhost:3020/api/auth/remove-cart/${productId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.data) {
         Swal.fire("Success", "Pizza removed from cart!", "success");
-        fetchCartItems(); // Refresh the cart items
+        fetchAllCartItem(); // Refresh the cart items
       } else {
         Swal.fire("Error", "Failed to remove pizza from cart.", "error");
       }
@@ -73,20 +76,27 @@ const Cart: React.FC = () => {
   };
 
   const handleQuantityChange = async (
-    pizzaName: string,
+    productId: string,
     newQuantity: number
   ) => {
     if (newQuantity < 1) return;
 
     try {
+      const token = await user?.getIdToken();
       const response = await axios.put(
-        `http://localhost:8080/api/cart/update/${userEmail}/${pizzaName}`,
+        `http://localhost:3020/api/auth/update-cart-item/${productId}`,
         {
           quantity: newQuantity,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
       if (response.data) {
-        fetchCartItems(); // Refresh the cart items
+        fetchAllCartItem(); // Refresh the cart items
       } else {
         Swal.fire("Error", "Failed to update quantity.", "error");
       }
@@ -97,13 +107,13 @@ const Cart: React.FC = () => {
   };
 
   const calculateTotalAmount = () => {
-    return cartItems.reduce((total, item) => total + item.totalPrice, 0);
+    return cartItems.reduce((total, item) => total + item.totalAmount, 0);
   };
 
   return (
     <div className="w-[100%] h-[100vh]">
       <Navbar />
-      <h3 className="pt-4 px-4 text-2xl font-bold text-gray-800 flex justify-center">
+      <h3 className="flex justify-center px-4 pt-4 text-2xl font-bold text-gray-800">
         My Cart
       </h3>
       <div className="w-[100%] flex justify-center items-center">
@@ -111,13 +121,12 @@ const Cart: React.FC = () => {
           <div className="flex justify-end">
             <button
               onClick={() => setShowCheckout(true)}
-              className="bg-green-700 hover:bg-green-500 text-white px-4 py-2 rounded"
+              className="px-4 py-2 text-white bg-green-700 rounded hover:bg-green-500"
             >
-              Checkout (Total: LKR {calculateTotalAmount()})
+              Checkout (Total: $ {calculateTotalAmount()})
             </button>
           </div>
-          {loading && <p className="text-blue-500">Loading cart items...</p>}
-          {cartItems.length === 0 && !loading && (
+          {cartItems.length === 0 && (
             <div className="flex flex-col items-center justify-center text-center text-gray-500">
               <FontAwesomeIcon
                 icon={faExclamationTriangle}
@@ -127,31 +136,31 @@ const Cart: React.FC = () => {
               <p className="text-lg">Your cart is empty.</p>
             </div>
           )}
-          <div className="w-full p-5 grid grid-cols-2 gap-4">
+          <div className="grid w-full grid-cols-2 gap-4 p-5">
             {Array.isArray(cartItems) &&
               cartItems.map((item: CartItem) => (
                 <div
-                  key={item.pizzaName}
-                  className="border border-brown-800 rounded-lg shadow-lg p-5"
+                  key={item.product._id}
+                  className="p-5 border rounded-lg shadow-lg border-brown-800"
                 >
-                  <h2 className="text-lg font-bold">{item.pizzaName}</h2>
-                  <p>Crust: {item.crust}</p>
-                  <p>Sauce: {item.sauce}</p>
-                  <p>Cheese: {item.cheese}</p>
-                  <p>Toppings: {item.toppings}</p>
-                  <p className="text-green-600 font-bold">
-                    Price: LKR {item.totalPrice}
+                  <h2 className="text-lg font-bold">{item.product.name}</h2>
+                  <p>Crust: {item.product.crust}</p>
+                  <p>Sauce: {item.product.sauce}</p>
+                  <p>Cheese: {item.product.cheese}</p>
+                  <p>Toppings: {item.product.toppings}</p>
+                  <p className="font-bold text-green-600">
+                    Price: $ {item.totalAmount}
                   </p>
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() =>
                           handleQuantityChange(
-                            item.pizzaName,
+                            item.product._id ?? "",
                             item.quantity - 1
                           )
                         }
-                        className="bg-gray-300 hover:bg-gray-400 text-black px-2 py-1 rounded"
+                        className="px-2 py-1 text-black bg-gray-300 rounded hover:bg-gray-400"
                       >
                         <FontAwesomeIcon icon={faMinus} />
                       </button>
@@ -159,18 +168,18 @@ const Cart: React.FC = () => {
                       <button
                         onClick={() =>
                           handleQuantityChange(
-                            item.pizzaName,
+                            item.product._id ?? "",
                             item.quantity + 1
                           )
                         }
-                        className="bg-gray-300 hover:bg-gray-400 text-black px-2 py-1 rounded"
+                        className="px-2 py-1 text-black bg-gray-300 rounded hover:bg-gray-400"
                       >
                         <FontAwesomeIcon icon={faPlus} />
                       </button>
                     </div>
                     <button
-                      onClick={() => handleRemoveItem(item.pizzaName)}
-                      className="bg-red-700 hover:bg-red-500 text-white p-3 rounded mt-4 flex items-center gap-2"
+                      onClick={() => handleRemoveItem(item.product._id ?? "")}
+                      className="flex items-center gap-2 p-3 mt-4 text-white bg-red-700 rounded hover:bg-red-500"
                     >
                       <FontAwesomeIcon icon={faTrashAlt} />
                     </button>
@@ -181,7 +190,7 @@ const Cart: React.FC = () => {
         </div>
       </div>
       {showCheckout && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-5 w-[50vw]">
             <Checkout
               cartItems={cartItems}

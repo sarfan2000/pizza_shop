@@ -10,13 +10,16 @@ import {
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { getAuth } from "firebase/auth";
-import { Pizza } from "../../models/pizza";
+import { FavoriteItem } from "../../models/favorite";
+
+
 
 const Favorite: React.FC = () => {
   const navigate = useNavigate();
-  const userEmail = "";
-  const [favoriteItems, setFavoriteItems] = useState<Pizza[]>([]);
+  const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const auth = getAuth();
+  const user = auth.currentUser;
 
   useEffect(() => {
     fetchFavoriteItems();
@@ -53,10 +56,18 @@ const Favorite: React.FC = () => {
     }
   };
 
-  const handleRemoveFavorite = async (pizzaName: string) => {
+  const handleRemoveFavorite = async (producId: string) => {
     try {
+      const token = await user?.getIdToken();
+
       const response = await axios.delete(
-        `http://localhost:8080/api/favorites/remove/${userEmail}/${pizzaName}`
+        `http://localhost:3020/api/auth/remove-favorite/${producId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.data) {
         Swal.fire("Success", "Pizza removed from favorites!", "success");
@@ -70,31 +81,28 @@ const Favorite: React.FC = () => {
     }
   };
 
-  const addToCart = async (pizza: Pizza) => {
-    const cartItem = {
-    //   userEmail: localStorage.getItem("userEmail"),
-    //   pizzaId: pizza.pizzaId,
-    //   crust: pizza.crust,
-    //   sauce: pizza.sauce,
-    //   cheese: pizza.cheese,
-    //   toppings: pizza.toppings,
-    //   price: pizza.price,
-    //   totalPrice: pizza.price,
-    //   quantity: 1,
-    };
-
+  const addToCart = async (producId: string) => {
     try {
+      const token = await user?.getIdToken();
+
       const response = await axios.post(
-        "http://localhost:8080/api/cart/add",
-        cartItem
+        `http://localhost:3020/api/auth/add-cart/${producId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.data) {
         Swal.fire("Success", "Pizza added to cart!", "success");
       } else {
-        Swal.fire("Error", "Failed to add pizza to cart.", "error");
+        Swal.fire("Error", "Failed to add pizza from cart.", "error");
       }
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error("Error adding from cart:", error);
+      Swal.fire("Error", "Failed to add pizza from cart.", "error");
     }
   };
 
@@ -102,7 +110,7 @@ const Favorite: React.FC = () => {
     <div className="w-[100%] h-[100vh]">
       <Navbar />
 
-      <h3 className="pt-4 px-4 text-2xl font-bold text-gray-800 flex justify-center">
+      <h3 className="flex justify-center px-4 pt-4 text-2xl font-bold text-gray-800">
         Favorites
       </h3>
       <div className="w-[100%] flex justify-center items-center">
@@ -111,7 +119,7 @@ const Favorite: React.FC = () => {
             <p className="text-blue-500">Loading favorite items...</p>
           )}
           {favoriteItems?.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center text-center text-gray-500 mt-16">
+            <div className="flex flex-col items-center justify-center mt-16 text-center text-gray-500">
               <FontAwesomeIcon
                 icon={faExclamationTriangle}
                 size="4x"
@@ -120,31 +128,33 @@ const Favorite: React.FC = () => {
               <p className="text-lg">Your favorites list is empty.</p>
             </div>
           )}
-          <div className="w-full p-5 grid grid-cols-2 gap-4">
+          <div className="grid w-full grid-cols-2 gap-4 p-5">
             {Array.isArray(favoriteItems) &&
-              favoriteItems?.map((item: Pizza, index) => (
+              favoriteItems?.map((item: FavoriteItem, index) => (
                 <div
                   key={index}
-                  className="border border-brown-800 rounded-lg shadow-lg p-5"
+                  className="p-5 border rounded-lg shadow-lg border-brown-800"
                 >
-                  <h2 className="text-lg font-bold">{item.name}</h2>
-                  <p>Crust: {item.crust}</p>
-                  <p>Sauce: {item.sauce}</p>
-                  <p>Cheese: {item.cheese}</p>
-                  <p>Toppings: {item.toppings}</p>
-                  <p className="text-green-600 font-bold">
-                    Price: LKR {item.price}
+                  <h2 className="text-lg font-bold">{item.product.name}</h2>
+                  <p>Crust: {item.product.crust}</p>
+                  <p>Sauce: {item.product.sauce}</p>
+                  <p>Cheese: {item.product.cheese}</p>
+                  <p>Toppings: {item.product.toppings}</p>
+                  <p className="font-bold text-green-600">
+                    Price: $ {item.product.price}
                   </p>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => addToCart(item)}
-                      className="bg-blue-700 hover:bg-blue-500 text-white p-3 rounded mt-4 flex items-center gap-2"
+                      onClick={() => addToCart(item.product._id ?? "")}
+                      className="flex items-center gap-2 p-3 mt-4 text-white bg-blue-700 rounded hover:bg-blue-500"
                     >
                       <FontAwesomeIcon icon={faShoppingCart} />
                     </button>
                     <button
-                      onClick={() => handleRemoveFavorite(item.name)}
-                      className="bg-red-700 hover:bg-red-500 text-white p-3 rounded mt-4 flex items-center gap-2"
+                      onClick={() =>
+                        handleRemoveFavorite(item.product._id ?? "")
+                      }
+                      className="flex items-center gap-2 p-3 mt-4 text-white bg-red-700 rounded hover:bg-red-500"
                     >
                       <FontAwesomeIcon icon={faTrashAlt} />
                     </button>

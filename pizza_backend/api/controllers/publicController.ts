@@ -141,7 +141,7 @@ export namespace PublicController {
 
   export async function test(req: Request, res: Response): Promise<void> {
     try {
-      // await Product.insertMany(pizzas);
+       await Product.insertMany(pizzas);
       Util.sendSuccess(res, "test passed successfully");
     } catch (error) {
       Util.sendError(res, error);

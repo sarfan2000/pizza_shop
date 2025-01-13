@@ -7,24 +7,21 @@ import pizza2 from "../../assets/pizza2.png";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faShoppingCart } from "@fortawesome/free-solid-svg-icons";
-import { useAuth } from "../../contexts/authContext";
 import { getAuth } from "firebase/auth";
 
 const Dashboard: React.FC = () => {
-  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   const [pizzas, setPizzas] = useState<Pizza[]>([]);
-  const [offerPizzas, setOfferPizzas] = useState<Pizza[]>([]);
+
+  const auth = getAuth();
+  const user = auth.currentUser;
 
   useEffect(() => {
     fetchAllProductData();
   }, []);
 
   const fetchAllProductData = async () => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
     if (!user) {
       navigate("/login");
       return;
@@ -49,62 +46,53 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const addToCart = async (pizza: any, isOffer: boolean) => {
-    const cartItem = {
-      userEmail: localStorage.getItem("userEmail"),
-      pizzaId: pizza.pizzaId,
-      pizzaName: pizza.name || "Custom Pizza",
-      crust: pizza.crust,
-      sauce: pizza.sauce,
-      cheese: pizza.cheese,
-      // toppings: toppings.join(', '),
-      toppings: pizza.toppings,
-      // price: calculatePrice(),
-      price: pizza.price,
-      totalPrice: isOffer ? pizza.netPrice : pizza.price,
-      quantity: 1,
-    };
-
+  const addToCart = async (producId: string) => {
     try {
+      const token = await user?.getIdToken();
+
       const response = await axios.post(
-        "http://localhost:8080/api/cart/add",
-        cartItem
+        `http://localhost:3020/api/auth/add-cart/${producId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.data) {
         Swal.fire("Success", "Pizza added to cart!", "success");
       } else {
-        Swal.fire("Error", "Failed to add pizza to cart.", "error");
+        Swal.fire("Error", "Failed to add pizza from cart.", "error");
       }
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error("Error adding from cart:", error);
+      Swal.fire("Error", "Failed to add pizza from cart.", "error");
     }
   };
 
-  const addToFavorites = async (pizza: any, isOffer: boolean) => {
-    const favoriteItem = {
-      userEmail: localStorage.getItem("userEmail"),
-      pizzaId: pizza.pizzaId,
-      pizzaName: pizza.name,
-      crust: pizza.crust,
-      sauce: pizza.sauce,
-      cheese: pizza.cheese,
-      toppings: pizza.toppings,
-      price: isOffer ? pizza.netPrice : pizza.price,
-    };
-
+  const addToFavorites = async (producId: string) => {
     try {
+      const token = await user?.getIdToken();
+
       const response = await axios.post(
-        "http://localhost:8080/api/favorites/add",
-        favoriteItem
+        `http://localhost:3020/api/auth/add-favorite/${producId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       if (response.data) {
         Swal.fire("Success", "Pizza added to favorites!", "success");
       } else {
-        Swal.fire("Error", "Failed to add pizza to favorites.", "error");
+        Swal.fire("Error", "Failed to add pizza from favorites.", "error");
       }
     } catch (error) {
-      console.error("Error adding to favorites:", error);
-      Swal.fire("Error", "Failed to add pizza to favorites.", "error");
+      console.error("Error adding from favorites:", error);
+      Swal.fire("Error", "Failed to add pizza from favorites.", "error");
     }
   };
 
@@ -112,71 +100,20 @@ const Dashboard: React.FC = () => {
     <div className="w-[100%] h-[100vh]">
       <Navbar />
 
-      <h3 className="pt-4 px-4 text-2xl font-bold text-gray-800 flex justify-center">
-        Hi {currentUser?.displayName}, Seasonal Offers & Promotions
-      </h3>
-
-      <div className="w-full p-5 grid grid-cols-4 gap-4">
-        {offerPizzas.map((pizza: Pizza) => (
-          <div
-            key={pizza._id}
-            className="border border-brown-800 rounded-lg shadow-lg p-5"
-          >
-            <img
-              src={pizza2}
-              alt="Pizza"
-              className="w-full h-40 object-contain rounded-md mb-4"
-            />
-            <h2 className="text-lg font-bold">{pizza.name}</h2>
-            <p>Crust: {pizza.crust}</p>
-            <p>Sauce: {pizza.sauce}</p>
-            <p>Cheese: {pizza.cheese}</p>
-            <p>
-              Toppings:{" "}
-              {pizza.toppings && pizza.toppings.length > 0
-                ? pizza.toppings.join(", ")
-                : "None"}
-            </p>
-
-            <div>
-              <p className="text-red-600 font-bold">
-                Discounted Price: LKR {pizza.netPrice}
-              </p>
-              <p className="text-gray-500 line-through">
-                Original Price: LKR {pizza.price}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => addToCart(pizza, true)}
-                className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                <FontAwesomeIcon icon={faShoppingCart} />
-              </button>
-              <button
-                onClick={() => addToFavorites(pizza, true)}
-                className="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center gap-2"
-              >
-                <FontAwesomeIcon icon={faHeart} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <h3 className="pt-4 px-4 text-2xl font-bold text-gray-800 flex justify-center">
+      <h3 className="flex justify-center px-4 pt-4 text-2xl font-bold text-gray-800">
         Featured
       </h3>
 
-      <div className="w-full p-5 grid grid-cols-4 gap-4">
+      <div className="grid w-full grid-cols-4 gap-4 p-5">
         {pizzas.map((pizza: Pizza) => (
           <div
             key={pizza.name}
-            className="border border-brown-800 rounded-lg shadow-lg p-5"
+            className="p-5 border rounded-lg shadow-lg border-brown-800"
           >
             <img
               src={pizza2}
               alt="Pizza"
-              className="w-full h-40 object-contain rounded-md mb-4"
+              className="object-contain w-full h-40 mb-4 rounded-md"
             />
             <h2 className="text-lg font-bold">{pizza.name}</h2>
             <p>Crust: {pizza.crust}</p>
@@ -189,17 +126,17 @@ const Dashboard: React.FC = () => {
                 : "None"}
             </p>
 
-            <p className="text-green-600 font-bold">Price: LKR {pizza.price}</p>
+            <p className="font-bold text-green-600">Price: $ {pizza.price}</p>
             <div className="flex gap-2">
               <button
-                onClick={() => addToCart(pizza, false)}
-                className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-600"
+                onClick={() => addToCart(pizza._id ?? "")}
+                className="px-4 py-2 text-white bg-blue-700 rounded hover:bg-blue-600"
               >
                 <FontAwesomeIcon icon={faShoppingCart} />
               </button>
               <button
-                onClick={() => addToFavorites(pizza, false)}
-                className="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center gap-2"
+                onClick={() => addToFavorites(pizza._id ?? "")}
+                className="flex items-center gap-2 px-4 py-2 text-white bg-red-700 rounded hover:bg-red-600"
               >
                 <FontAwesomeIcon icon={faHeart} />
               </button>
